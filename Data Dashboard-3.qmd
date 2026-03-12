@@ -1,0 +1,387 @@
+---
+title: "Carbon Capture and Storage"
+author: "Marianna Rivera, Charlotte Johnson, Catherine Hsu"
+format: 
+  html:
+    theme: solar
+    fontsize: 1.1em
+    fontcolor: white
+    page-layout: full
+    embed-resources: true
+editor: visual
+---
+
+# Introduction
+
+::: columns
+:::{.column width = "45%"}
+
+## Overview
+
+Climate change is one of the most significant environmental challenges facing the world today. Carbon dioxide (CO₂) emissions produced by fossil fuel use are a major contributor to global warming. As countries search for ways to reduce emissions without immediately eliminating fossil fuel infrastructure, **carbon capture and storage (CCS)** has emerged as an important technological strategy. CCS involves capturing carbon dioxide emissions from industrial processes or power plants and storing them underground rather than releasing them into the atmosphere. According to the U.S. Department of Energy, carbon capture technologies have the potential to significantly reduce emissions from existing energy systems while cleaner alternatives continue to develop (<https://www.energy.gov>).
+
+In this project, we explore the relationship between carbon capture projects and national CO₂ emissions patterns. Understanding whether carbon capture deployment aligns with emissions patterns can provide insight into whether CCS technologies are being implemented where they are most needed. Additionally, examining emissions trends before and after CCS deployment may offer preliminary evidence about whether these projects correspond with changes in emissions intensity.
+:::
+
+:::{.column width = "5%"}
+:::
+
+:::{.column width = "50%"}
+
+## Research Questions
+
+**1. Which countries have the highest number of carbon capture and storage projects?**\
+
+**2. Is there a relationship between a country's CO₂ emissions per capita and the number of carbon capture projects located there?**\
+
+**3. How do CO₂ emissions per capita change before and after the introduction of carbon capture projects in a country?**
+
+To answer these questions, we combine two publicly available datasets. The first dataset contains global carbon capture project information collected by the U.S. Department of Energy’s National Energy Technology Laboratory (<https://netl.doe.gov/carbon-management/carbon-storage/worldwide-ccs-database>). The second dataset contains country-level CO₂ emissions per capita compiled by Our World in Data (<https://ourworldindata.org/grapher/co-emissions-per-capita>). By merging these datasets, we are able to examine how carbon capture project deployment relates to national emissions patterns over time.
+
+This analysis is important because it helps explore whether carbon capture technology is being implemented in regions where emissions are highest, and whether these projects correspond with measurable emissions trends. However, interpreting these patterns also requires caution. The presence of carbon capture projects does not necessarily imply that emissions will immediately decrease, as many projects operate at relatively small scales compared to national emissions totals. Additionally, both datasets may contain missing data or inconsistencies across countries and years, which may influence the conclusions that can be drawn from the analysis.
+:::
+
+:::{.text-center}
+![Carbon Capture Process](Carbon%20Capture%20Cover.jpg)
+::: 
+
+::: columns
+## Data Context
+:::
+
+Worldwide Carbon Capture and Storage Database
+The first dataset we used is the Worldwide Carbon Capture and Storage Database, which is maintained by the U.S. Department of Energy’s National Energy Technology Laboratory (NETL). NETL describes this as a public database of carbon capture, storage, and combined capture-and-storage projects around the world, and the dataset is publicly available as a downloadable spreadsheet on its website. NETL says the database includes projects from more than 30 countries across 6 continents, which makes it useful for comparing CCS activity across different regions.
+This dataset is a project-level sample, meaning each row represents an individual CCS project rather than a country’s total climate policy efforts. In our file, the data records information such as the project name, country location, state or regional location, project start date, whether the project is focused on capture, storage, or both, and some project characteristics like capture amount and cost. These records were compiled from publicly available sources, so the dataset is based on documented CCS efforts by industries, governments, and other public groups rather than direct measurement from one single experiment or survey. That makes it useful for identifying where CCS projects exist and when they began.
+According to the NETL database page, the version described on the site includes 299 site-located projects, including capture-only, storage-only, and combined projects. For our analysis, we focused on the rows that had usable dates and project information so we could connect them to yearly emissions data by country. The most relevant geographic context for this dataset is the country level, since that is the scale at which we joined it to emissions data, although some records also include state or subnational location information.
+A major strength of this sample is that it gives us a concrete way to track where CCS projects are being developed globally. However, one limitation is that the sample reflects documented projects, not the full climate impact of those projects. A country with many small projects could appear more active than a country with fewer but much larger projects, so project count alone does not fully represent how much carbon is actually being captured or stored.
+
+CO₂ Emissions Per Capita Dataset
+The second dataset we used is the CO₂ emissions per capita dataset published by Our World in Data. Our World in Data makes this dataset publicly available through its grapher tools, and it reports national carbon dioxide emissions on a per-person basis. The dataset is based on national CO₂ emissions from fossil fuels and industry, and the site explains that land-use change is not included in this measure. It also explains that emissions per capita are calculated by dividing a country’s emissions by its population, which makes it useful for comparing countries of very different sizes.
+This dataset is a country-year sample, so each row represents one country in one year. What is being measured or recorded is the average amount of CO₂ emissions per person in that country for that year. Because the data is organized this way, it allows us to look at both cross-country differences and changes over time. In our project, that was especially helpful because we wanted to compare national emissions patterns to the timing and location of carbon capture projects.
+The public Our World in Data source shows that this dataset spans a long historical period, with charts and downloadable data covering emissions across many countries over time. Although the broader OWID data extends far beyond the years we analyzed, our joined project focused on the years that overlapped with the CCS project data, especially the 21st century. The geographic context is again the country level, since the values are reported nationally rather than by city or facility.
+One benefit of this sample is that it gives standardized annual measurements that are easy to compare across countries, which makes it a strong fit for our project. One limitation is that it only measures territorial CO₂ emissions from fossil fuels and industry, so it does not include land-use change and it does not fully capture every part of a country’s total climate impact. Because of that, it is very useful for national comparisons, but it may still underestimate some broader environmental effects.
+
+
+
+# Group Information
+
+::: columns
+:::{.column width = "30%"}
+
+### Marianna Rivera
+
+The School of Environment, University of Washington, mari305\@uw.edu
+
+Marianna is interested in the intersection of technology and the environment.
+:::
+
+:::{.column width = "3%"}
+:::
+
+:::{.column width = "33%"}
+
+### Charlotte Johnson
+
+The School of Psychology, University of Washington, charlj4\@uw.edu
+
+Charlotte is interested in climate change issues and how we can improve climate strategies. More generally, she is interested in using data science and statistics within the field of psychology to improve mental health resources and accessibility for all.
+:::
+
+:::{.column width = "3%"}
+:::
+
+:::{.column width = "30%"}
+
+### Catherine Hsu
+
+The Information School, University of Washington, cath02\@uw.edu
+
+Catherine is interested in using data and technology to improve decision making in real world contexts.
+
+:::
+
+:::
+# Data Questions
+
+## Data Joining
+
+```{r}
+#| echo: true
+library("dplyr")
+library("ggplot2")
+library("tidyr")
+library("plotly")
+
+carbon_capture <-read.csv("CCS Map Data Jan2023.csv")
+carbon_emissions <- read.csv("co2-emissions-per-capita.csv")
+
+carbon_capture <-
+  carbon_capture |>
+  mutate(
+    Project.Date = na_if(trimws(Project.Date), ""),
+    Project.Date = as.Date(Project.Date, format = "%m/%d/%y"),
+    Year = as.integer(format(Project.Date, "%Y"))
+  )
+
+carbon_country_data <-
+  carbon_capture |>
+  full_join(
+    carbon_emissions, 
+    join_by(
+      Country.Location == Entity,
+      Year == Year
+      )
+    )
+
+
+##Cleaning Rows
+# Removing Irrelevant Rows
+# We decided to keep 10 rows (Country, State, Year, CO2 Per Capita, Name of Project, Storage or Capture Project, Capture Amount, Capture Unit, Cost of Project and the date the project began)
+carbon_country_data <-
+  carbon_country_data |>
+  select(
+    country = Country.Location,
+    state = State.Location,
+    year = Year,
+    co2_per_capita = CO..emissions.per.capita,
+    project_name = Project.Name,
+    storage_or_capture = Storage.and.or.Capture,
+    capture_amount = Size.or.Capture.Amount.unit.base.power,
+    capture_unit = Power.or.Capture.Unit,
+    cost = Cost,
+    project_date = Project.Date
+  )
+
+
+##Cleaning year column
+#Filter years only for 21st century as all of the capture projects in this datatsets started this century.
+carbon_country_data <-
+  carbon_country_data |>
+  filter(
+    year >= 2000, 
+    year <= 2025)
+
+##Cleaning Capture amount, Capture Unit and Project Date
+#For our analysis purposes we cant evaluate data missing the carbon capture amount information and without a start date so the rows missing this information will not be included in our final Dataset.
+
+#Fist the these columns need to reformatted. For capture amount and capture unit instead of N/A, missing data is represented as a space, so we mutated empty spaces to be equivalent to N/As.
+
+carbon_country_data <-
+  carbon_country_data |>
+  mutate(
+    capture_amount = na_if(trimws(capture_amount), ""),
+    capture_unit = na_if(trimws(capture_unit), ""),
+  )
+
+#Then we filtered out any row that had N/A data for capture amount, capture unit and project date.
+carbon_country_data <-
+  carbon_country_data |>
+  filter(
+    !is.na(capture_amount),
+    !is.na(capture_unit),
+    !is.na(project_date)
+    )
+
+
+```
+
+## CSS Projects by Country
+
+Which counties have the highest number of carbon storage projects, compared to the countries with the highest number of activate carbon capture projects, which countries have the highest number of carbon capture and storage combined projects?
+
+### Description
+
+We compared the countries with the highest to lowest number of CSS projects and review the popularity of just capture, storage or a combination of both. Data has been split into three distinct categories [Storage, Capture, Capture and Storage] organized by country. The intent is so compare the amount of projects in each category as well as view the countries with the highest number of active projects. 
+
+```{r}
+library(plotly)
+
+ccs_status_countries <- carbon_country_data |>
+  filter(storage_or_capture %in% c("Capture", "Storage", "Capture and Storage")) |>
+  group_by(country, storage_or_capture) |>
+  summarize(num_projects = n(), .groups = "drop") |>
+  pivot_wider(
+    names_from = storage_or_capture,
+    values_from = num_projects,
+    values_fill = 0
+  ) |>
+  mutate(
+    total_projects = Capture + Storage + `Capture and Storage`
+  ) |>
+  arrange(desc(total_projects)) |>
+  mutate(
+    country = factor(country, levels = country)
+  ) |>
+  pivot_longer(
+    cols = c("Capture", "Storage", "Capture and Storage"),
+    names_to = "project_type",
+    values_to = "num_projects"
+  )
+
+bar_plot <- ggplot(data = ccs_status_countries) +
+  geom_col(
+    mapping = aes(
+      x = country,
+      y = num_projects,
+      fill = project_type,
+      text = paste(
+        "Country:", country,
+        "<br>Project Type:", project_type,
+        "<br>Number of Projects:", num_projects
+      )
+    ),
+    position = "dodge"
+  ) +
+  coord_flip() +
+  labs(
+    title = "Carbon Capture vs. Storage Projects by Country",
+    x = "Country",
+    y = "Number of Projects",
+    fill = "Project Type"
+  ) +
+  theme_minimal()
+
+ggplotly(bar_plot, tooltip = "text")
+
+```
+
+## Emissions vs. CSS Projects
+
+::: columns
+:::{.column width = "32%"}
+
+Is there a relationship between a country's CO₂ emissions per capita and the number of carbon capture or storage projects located in that country?
+
+### Description
+
+To explore the relationship between emissions intensity and carbon capture deployment, we created a scatterplot comparing each country's CO₂ emissions per capita with the total number of carbon capture projects located there. We first summarized the number of projects by country and then paired this information with emissions data for the same countries.
+
+This visualization helps evaluate whether countries with higher emissions per person tend to invest more heavily in carbon capture technologies. As the trend line shows, a slightly positive relationship exists, which suggests that countries with higher emissions have a higher project count axis. While the plot provides some insight into this relationship, it also emphasizes the complexity of the issue, as policy, economic resources, and energy infrastructure may all influence where carbon capture projects are developed.
+:::
+
+:::{.column width = "3%"}
+:::
+
+
+:::{.column width = "65%"}
+
+```{r}
+
+projects_emissions <- carbon_country_data |>
+  filter(storage_or_capture %in% c("Capture", "Storage", "Capture and Storage")) |>
+  group_by(country) |>
+  summarize(
+    num_projects = n(),
+    co2_per_capita = mean(co2_per_capita, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  filter(!is.na(co2_per_capita))
+
+ggplot(projects_emissions, aes(x = co2_per_capita, y = num_projects)) +
+  geom_point(size = 3, color = "steelblue") +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  geom_text(aes(label = country), size = 3, check_overlap = TRUE) +
+  labs(
+    title = "CO2 Emissions per Capita vs. Number of CCS Projects by Country",
+    x = "CO2 Emissions per Capita",
+    y = "Number of CCS Projects"
+  ) +
+  theme_minimal()
+```
+:::
+
+## Emissions Before vs After CSS
+
+How do CO₂ emissions per capita change before and after the introduction of carbon capture projects in a country?
+
+### Description
+
+The third visualization compares average CO₂ emissions per capita before and after the introduction of carbon capture projects within each country. To create this analysis, we first identified the year in which each country introduced its first carbon capture project. We then categorized emissions data as either occurring before or after that year and calculated the average emissions for each period.
+
+This comparison provides insight into whether emissions patterns changed after carbon capture technology was introduced. While some countries appear to show decreases in emissions after implementation, others show little change or even increases. This suggests that while carbon capture technology may contribute to emissions mitigation, it is likely only one factor among many influencing national emissions trends.
+
+:::
+For Question 3, we used two intermediate/novel tools from the assignment list: dates and conditional transformation. First, we converted the project start date into a year so that carbon capture projects could be aligned with annual emissions data. This was necessary because the two datasets recorded time differently, and without converting dates we would not have been able to compare project timing to country-level emissions trends.
+
+We also used a conditional transformation to classify each emissions observation as occurring either before or after the first carbon capture project in that country. We used this transformation because our question specifically asks how emissions change across those two periods. An alternative would have been to manually filter each country into separate subsets, but that would have been much less efficient and harder to apply consistently across all countries.
+:::
+
+```{r}
+
+carbon_capture <- read.csv("CCS Map Data Jan2023.csv")
+carbon_emissions <- read.csv("co2-emissions-per-capita.csv")
+
+carbon_capture <- carbon_capture |>
+  mutate(
+    Project.Date = na_if(trimws(Project.Date), ""),
+    Project.Date = as.Date(Project.Date, format = "%m/%d/%y"),
+    Year = as.integer(format(Project.Date, "%Y"))
+  )
+
+first_capture_year <- carbon_capture |>
+  filter(Storage.and.or.Capture %in% c("Capture", "Capture and Storage")) |>
+  filter(!is.na(Year)) |>
+  group_by(Country.Location) |>
+  summarize(first_capture_year = min(Year), .groups = "drop") |>
+  filter(is.finite(first_capture_year)) |>
+  rename(country = Country.Location)
+
+emissions_before_after <- carbon_emissions |>
+  inner_join(first_capture_year, join_by(Entity == country)) |>
+  mutate(
+    period = case_when(
+      Year < first_capture_year ~ "Before",
+      TRUE ~ "After"
+    )
+  ) |>
+  group_by(Entity, period) |>
+  summarize(
+    avg_co2_per_capita = mean(CO..emissions.per.capita, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  pivot_wider(
+    names_from = period,
+    values_from = avg_co2_per_capita,
+    values_fill = list(avg_co2_per_capita = NA)
+  ) |>
+  filter(!is.na(Before) & !is.na(After)) |>
+  pivot_longer(
+    cols = c(Before, After),
+    names_to = "period",
+    values_to = "avg_co2_per_capita"
+  )
+
+ggplot(emissions_before_after,
+       aes(x = Entity, y = avg_co2_per_capita, fill = period)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  labs(
+    title = "Average CO2 Emissions Per Capita\n Before vs. After Carbon Capture Introduction",
+    x = "Country",
+    y = "Average CO2 Emissions Per Capita",
+    fill = "Period"
+  ) +
+  theme_minimal()
+```
+## Coding Notes
+
+In addition to tools we practiced in class, we used a few functions that helped us clean and combine our datasets more effectively.
+
+We used as.Date() to convert the project start date column from text into a date format that R could recognize. This solved the problem of the carbon capture dataset recording dates differently from the emissions dataset, and we could not properly align project timing with yearly emissions trends without first converting those values. We learned to use as.Date() by reading R documentation and testing different date format examples until the conversion worked with our dataset.
+
+We also used join_by() when joining the two datasets by both country and year. This solved the problem of needing to match observations across two variables at the same time, which was important because the data came from different sources and needed more precise matching than a simpler join setup. We learned how to use join_by() by reviewing dplyr documentation and experimenting with join syntax in our project code.
+
+We also used Quarto dashboard formatting features, including page and card structure, to organize our report into readable sections. This solved the problem of presenting multiple questions, visualizations, and explanations in one interactive dashboard format, which could not have been done as clearly in a plain script or basic report layout. We learned how to use Quarto formatting by reviewing class examples and checking Quarto documentation for dashboard structure.
+
+
+# Conclusion
+
+This project explored how carbon capture and storage projects relate to national CO₂ emissions patterns. Our analysis examined three key questions regarding the geographic distribution of carbon capture projects, the relationship between emissions intensity and project deployment, and how emissions trends change following the introduction of carbon capture technology.
+
+First, we found that carbon capture projects are concentrated in a relatively small number of countries, particularly the United States and several European nations. This likely reflects differences in economic resources, energy infrastructure, and climate policy initiatives. Countries with more industrial activity and stronger climate mitigation strategies may be more likely to invest in carbon capture technologies.
+
+Second, our analysis suggests that there may be some relationship between emissions intensity and the number of carbon capture projects in a country, although this relationship is not perfectly consistent. Many high-emissions countries appear to invest in carbon capture infrastructure, but other factors such as political priorities and technological development likely influence where projects are implemented.
+
+Finally, when examining emissions trends before and after the introduction of carbon capture projects, the results were mixed. Some countries appear to experience decreases in emissions per capita after implementation, while others show little change. This suggests that carbon capture technology alone may not be sufficient to significantly reduce national emissions, but it may still play a role as part of a broader climate mitigation strategy.
+
+Future research could expand this analysis by examining additional variables such as project capacity, industrial sector emissions, or government climate policies. Incorporating these factors could provide a more detailed understanding of how carbon capture technologies contribute to global emissions reduction efforts.
